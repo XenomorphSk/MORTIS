@@ -15,7 +15,8 @@
         <div class="menu-content">
             <h1 class="menu-title glitch" data-text="MORTIS">MORTIS</h1>
             <p class="menu-subtitle">O ÚLTIMO RITUAL DE LUIS DUCCI</p>
-            <button onclick="showMonologue()" class="menu-button">INICIAR</button>
+            <button onclick="newGame()" class="menu-button">NOVO JOGO</button>
+            <button onclick="continueGame()" class="menu-button" id="continue-btn" style="margin-top: 15px; display: none;">CONTINUAR</button>
             <p class="menu-hint">▸ PRESSIONE ENTER</p>
             
             <!-- Doação ETH -->
@@ -32,6 +33,18 @@
         </div>
     </div>
 
+    <!-- Tela da Loja (Rogue-like) -->
+    <div id="shop-screen" class="screen shop-screen hidden">
+        <div id="shop-background" class="menu-background" style="background-image: url('MENU.png');"></div>
+        <div class="crt-overlay"></div>
+        <div class="shop-content">
+            <h1 class="shop-title red-text">🛒 LOJA DO RITUAL</h1>
+            <p class="shop-subtitle">ESCOLHA SABIAMENTE, APENAS UM ITEM</p>
+            <div id="shop-items" class="shop-items"></div>
+            <p class="shop-hint">▸ CLIQUE EM UM ITEM PARA COMPRAR</p>
+        </div>
+    </div>
+
     <!-- Tela do Monólogo -->
     <div id="monologue-screen" class="screen monologue-screen hidden">
         <div id="monologue-background" class="menu-background" style="background-image: url('MENU.png');"></div>
@@ -40,8 +53,8 @@
             <div id="monologue-text" class="monologue-text"></div>
             <div id="monologue-cursor" class="monologue-cursor">█</div>
         </div>
+        <button onclick="skipMonologue()" class="skip-button">⏭ PULAR</button>
         <div id="monologue-button-container" class="menu-button-container hidden">
-            <button onclick="skipMonologue()" class="menu-button skip-button">⏭ PULAR</button>
             <button onclick="startGame()" class="menu-button">INICIAR RITUAL</button>
             <p style="color: #444; font-size: 16px; margin-top: 10px;">▸ PRESSIONE ENTER PARA CONTINUAR</p>
         </div>
@@ -59,8 +72,8 @@
     <div id="night-complete-screen" class="screen hidden">
         <h1 class="red-text" style="font-size: 72px;">NOITE CONCLUÍDA</h1>
         <p style="font-size: 32px; color: #aaa;">O DEMÔNIO FOI CONTIDO...</p>
-        <p style="font-size: 24px; color: #555; margin-top: 10px;">PRÓXIMA NOITE EM BREVE</p>
-        <button onclick="continueNight()" class="menu-button" style="margin-top: 30px;">CONTINUAR</button>
+        <p style="font-size: 24px; color: #555; margin-top: 10px;">PREPARE-SE PARA A PRÓXIMA NOITE</p>
+        <button onclick="goToShop()" class="menu-button" style="margin-top: 30px;">IR À LOJA</button>
     </div>
 
     <!-- Tela de Jogo Completo -->

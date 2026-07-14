@@ -1,4 +1,4 @@
-/* style.css - Mantido igual ao anterior, sem alterações */
+/* style.css */
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 :root {
@@ -115,7 +115,7 @@ body {
     font-size: 26px;
     color: #fff;
     letter-spacing: 6px;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
     text-shadow: 2px 2px 0px #000;
     animation: subtitle-breathe 3s ease-in-out infinite alternate;
 }
@@ -141,18 +141,6 @@ body {
     transform: scale(1.05);
 }
 
-.skip-button {
-    border-color: #666;
-    font-size: 24px;
-    padding: 8px 30px;
-    margin-right: 15px;
-}
-
-.skip-button:hover {
-    background: #666;
-    border-color: #666;
-}
-
 .menu-hint {
     color: #666;
     font-size: 18px;
@@ -161,10 +149,99 @@ body {
     animation: hint-blink 1s steps(2) infinite;
 }
 
+/* --- LOJA --- */
+.shop-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 98;
+    overflow: hidden;
+}
+
+.shop-content {
+    position: relative;
+    z-index: 4;
+    text-align: center;
+    max-width: 800px;
+    width: 95%;
+    padding: 20px;
+}
+
+.shop-title {
+    font-size: 56px;
+    letter-spacing: 6px;
+    margin-bottom: 5px;
+    color: #e50000;
+    text-shadow: 0 0 30px rgba(229, 0, 0, 0.3);
+}
+
+.shop-subtitle {
+    font-size: 22px;
+    color: #888;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+}
+
+.shop-items {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.shop-item {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #444;
+    padding: 25px 20px;
+    width: 200px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.shop-item:hover {
+    border-color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+.shop-item .item-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.shop-item .item-name {
+    font-size: 24px;
+    color: #fff;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.shop-item .item-desc {
+    font-size: 16px;
+    color: #888;
+    line-height: 1.4;
+}
+
+.shop-hint {
+    color: #444;
+    font-size: 16px;
+    margin-top: 25px;
+    letter-spacing: 2px;
+}
+
 /* --- DOAÇÃO ETH --- */
 .donation-container {
-    margin-top: 40px;
-    padding-top: 30px;
+    margin-top: 30px;
+    padding-top: 25px;
     border-top: 2px solid #333;
 }
 
@@ -334,6 +411,28 @@ body {
     z-index: 4;
     margin-top: 30px;
     text-align: center;
+}
+
+.skip-button {
+    position: absolute;
+    bottom: 120px;
+    right: 50px;
+    z-index: 5;
+    background: transparent;
+    color: #666;
+    border: 2px solid #666;
+    padding: 8px 25px;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 2px;
+}
+
+.skip-button:hover {
+    background: #666;
+    color: #000;
+    border-color: #666;
 }
 
 .hidden {

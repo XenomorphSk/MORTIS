@@ -100,6 +100,7 @@ let stormAudio = null;
 let monologueAudio = null;
 let isMonologuePlaying = false;
 let monologueTypingInterval = null;
+let audioContext = null;
 
 // Áudios do Luis
 let luisAudios = [];
@@ -186,7 +187,7 @@ function typeMonologue() {
         monologueAudio.volume = volumeControl.value / 100;
         monologueAudio.play().catch(err => {
             console.warn('Erro ao tocar monólogo:', err);
-            // Se não conseguir tocar, mostra o botão mesmo assim
+            // Mostra o botão mesmo sem áudio
             setTimeout(() => {
                 monologueButtonContainer.classList.remove('hidden');
                 monologueCursor.style.display = 'none';
@@ -232,12 +233,10 @@ function typeMonologue() {
             if (audioFinished) {
                 monologueButtonContainer.classList.remove('hidden');
             } else {
-                // Se o áudio ainda não terminou, espera
                 setTimeout(() => {
                     if (!monologueButtonContainer.classList.contains('hidden')) return;
-                    // Se passou 10 segundos e ainda não terminou, mostra o botão
                     monologueButtonContainer.classList.remove('hidden');
-                }, 10000);
+                }, 8000);
             }
         }
     }
@@ -245,53 +244,73 @@ function typeMonologue() {
     typeNextChar();
 }
 
-// --- SISTEMA DE ÁUDIO - CORRIGIDO PARA GITHUB PAGES ---
+// --- SISTEMA DE ÁUDIO CORRIGIDO ---
 function initAudio() {
     try {
-        // Usa caminhos relativos com extensão correta
+        // Cria o AudioContext para gerenciar áudio
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Função para criar áudio com fallback
+        function createAudio(src) {
+            const audio = new Audio();
+            audio.src = src;
+            audio.preload = 'auto';
+            return audio;
+        }
+        
+        // Verifica se os arquivos existem com diferentes extensões
         const audioFiles = {
-            storm: 'distant-storm-1.wav',
-            monologue: 'monologo.mp3',
-            game: '8-bit-horror-noises.mp3',
-            baby: 'baby-crying-1-month.wav'
+            storm: ['distant-storm-1.wav', 'distant-storm-1.mp3'],
+            monologue: ['monologo.mp3', 'monologo.wav'],
+            game: ['8-bit-horror-noises.mp3', '8-bit-horror-noises.wav'],
+            baby: ['baby-crying-1-month.wav', 'baby-crying-1-month.mp3']
         };
         
-        // Verifica se os arquivos existem antes de criar
-        stormAudio = new Audio(audioFiles.storm);
+        // Tenta carregar cada áudio com fallback
+        stormAudio = createAudio(audioFiles.storm[0]);
         stormAudio.loop = true;
         stormAudio.volume = volumeControl.value / 100 * 0.8;
         
-        monologueAudio = new Audio(audioFiles.monologue);
+        monologueAudio = createAudio(audioFiles.monologue[0]);
         monologueAudio.volume = volumeControl.value / 100;
         monologueAudio.loop = false;
         
-        audioElement = new Audio(audioFiles.game);
+        audioElement = createAudio(audioFiles.game[0]);
         audioElement.loop = true;
         audioElement.volume = volumeControl.value / 100;
         
-        babyCryAudio = new Audio(audioFiles.baby);
+        babyCryAudio = createAudio(audioFiles.baby[0]);
         babyCryAudio.volume = Math.min(1, (volumeControl.value / 100) * 1.5);
         babyCryAudio.loop = false;
         
         // Áudios do Luis (1.mp3 a 8.mp3)
         for (let i = 1; i <= 8; i++) {
-            const audio = new Audio(`${i}.mp3`);
+            const audio = createAudio(`${i}.mp3`);
             audio.volume = 1.0;
             audio.loop = false;
             luisAudios.push(audio);
         }
         
-        // Tenta tocar a tempestade
-        stormAudio.play().catch(err => {
-            console.warn('Áudio bloqueado, aguardando interação do usuário');
-            // Adiciona listener para tocar após clique
-            document.addEventListener('click', function playOnClick() {
-                if (stormAudio && stormAudio.paused) {
-                    stormAudio.play().catch(() => {});
-                }
-                document.removeEventListener('click', playOnClick);
-            }, { once: true });
-        });
+        // Tenta tocar a tempestade - apenas se o usuário já interagiu
+        const tryPlayStorm = () => {
+            if (stormAudio && stormAudio.paused) {
+                stormAudio.play().catch(err => {
+                    console.log('⏳ Aguardando interação para tocar áudio');
+                });
+            }
+        };
+        
+        // Toca quando o usuário clicar
+        document.addEventListener('click', function playOnClick() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            tryPlayStorm();
+            document.removeEventListener('click', playOnClick);
+        }, { once: true });
+        
+        // Tenta tocar imediatamente (pode falhar)
+        setTimeout(tryPlayStorm, 100);
         
         setupAudioDistortion();
         
@@ -300,9 +319,16 @@ function initAudio() {
             console.log('✅ Áudio do jogo carregado!');
         });
         
-        // Evento de erro para debug
+        // Evento de erro com fallback
         audioElement.addEventListener('error', (e) => {
             console.warn('⚠️ Erro ao carregar áudio:', e.target.src);
+            // Tenta carregar com extensão alternativa
+            const src = e.target.src;
+            if (src.endsWith('.mp3')) {
+                e.target.src = src.replace('.mp3', '.wav');
+            } else if (src.endsWith('.wav')) {
+                e.target.src = src.replace('.wav', '.mp3');
+            }
         });
         
         return true;
@@ -315,30 +341,39 @@ function initAudio() {
 function setupAudioDistortion() {
     if (!babyCryAudio) return;
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaElementSource(babyCryAudio);
-        const gainNode = audioContext.createGain();
-        const distortion = audioContext.createWaveShaper();
-        
-        function makeDistortionCurve(amount) {
-            const k = amount;
-            const n_samples = 44100;
-            const curve = new Float32Array(n_samples);
-            const deg = Math.PI / 180;
-            let i = 0, x;
-            for (; i < n_samples; ++i) {
-                x = i * 2 / n_samples - 1;
-                curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-            }
-            return curve;
+        // Verifica se o AudioContext já existe
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        distortion.curve = makeDistortionCurve(30);
-        distortion.oversample = '4x';
-        source.connect(distortion);
-        distortion.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        gainNode.gain.value = 0.8;
+        // Tenta criar o nó de distorção
+        try {
+            const source = audioContext.createMediaElementSource(babyCryAudio);
+            const gainNode = audioContext.createGain();
+            const distortion = audioContext.createWaveShaper();
+            
+            function makeDistortionCurve(amount) {
+                const k = amount;
+                const n_samples = 44100;
+                const curve = new Float32Array(n_samples);
+                const deg = Math.PI / 180;
+                let i = 0, x;
+                for (; i < n_samples; ++i) {
+                    x = i * 2 / n_samples - 1;
+                    curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+                }
+                return curve;
+            }
+            
+            distortion.curve = makeDistortionCurve(30);
+            distortion.oversample = '4x';
+            source.connect(distortion);
+            distortion.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.value = 0.8;
+        } catch (e) {
+            console.warn('⚠️ Distorção não disponível, continuando sem ela');
+        }
     } catch (e) {
         console.warn('⚠️ Erro ao configurar distorção:', e);
     }
@@ -470,6 +505,11 @@ function checkLuisImage() {
 function startGame() {
     monologueScreen.classList.add('hidden');
     container.classList.remove('hidden');
+    
+    // Resume o AudioContext se estiver suspenso
+    if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
     
     if (monologueAudio) {
         monologueAudio.pause();

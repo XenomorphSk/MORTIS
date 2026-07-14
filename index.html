@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MORTIS - O Último Ritual de Luis Ducci</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tela do Menu Principal -->
+    <div id="menu-screen" class="screen menu-screen">
+        <div id="menu-background" class="menu-background" style="background-image: url('MENU.png');"></div>
+        <div class="crt-overlay"></div>
+        <div class="menu-content">
+            <h1 class="menu-title glitch" data-text="MORTIS">MORTIS</h1>
+            <p class="menu-subtitle">O ÚLTIMO RITUAL DE LUIS DUCCI</p>
+            <button onclick="showMonologue()" class="menu-button">INICIAR</button>
+            <p class="menu-hint">▸ PRESSIONE ENTER</p>
+            
+            <!-- Doação ETH -->
+            <div class="donation-container">
+                <p class="donation-text">APOIE O RITUAL</p>
+                <div class="eth-info">
+                    <img src="eth.jpeg" alt="QR Code ETH" class="eth-qr">
+                    <div class="eth-address-container">
+                        <span class="eth-address">0xdc34CFc0FD65BDe8Cb16be7010d6215B1d638a46</span>
+                        <button onclick="copyEthAddress()" class="eth-copy-btn">📋 COPIAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela do Monólogo -->
+    <div id="monologue-screen" class="screen monologue-screen hidden">
+        <div id="monologue-background" class="menu-background" style="background-image: url('MENU.png');"></div>
+        <div class="crt-overlay"></div>
+        <div id="monologue-container" class="monologue-container">
+            <div id="monologue-text" class="monologue-text"></div>
+            <div id="monologue-cursor" class="monologue-cursor">█</div>
+        </div>
+        <div id="monologue-button-container" class="menu-button-container hidden">
+            <button onclick="skipMonologue()" class="menu-button skip-button">⏭ PULAR</button>
+            <button onclick="startGame()" class="menu-button">INICIAR RITUAL</button>
+            <p style="color: #444; font-size: 16px; margin-top: 10px;">▸ PRESSIONE ENTER PARA CONTINUAR</p>
+        </div>
+    </div>
+
+    <!-- Tela de Game Over -->
+    <div id="gameover-screen" class="screen hidden">
+        <h1 class="red-text" style="font-size: 90px;">MORTIS</h1>
+        <p style="font-size: 32px; color: #aaa;">LUIS FOI POSSUÍDO.</p>
+        <p id="final-score" style="font-size: 24px; color: #555;">RITUAIS: 0</p>
+        <button onclick="restartGame()">REPETIR</button>
+    </div>
+
+    <!-- Tela de Noite Concluída -->
+    <div id="night-complete-screen" class="screen hidden">
+        <h1 class="red-text" style="font-size: 72px;">NOITE CONCLUÍDA</h1>
+        <p style="font-size: 32px; color: #aaa;">O DEMÔNIO FOI CONTIDO...</p>
+        <p style="font-size: 24px; color: #555; margin-top: 10px;">PRÓXIMA NOITE EM BREVE</p>
+        <button onclick="continueNight()" class="menu-button" style="margin-top: 30px;">CONTINUAR</button>
+    </div>
+
+    <!-- Tela de Jogo Completo -->
+    <div id="game-complete-screen" class="screen hidden">
+        <h1 class="red-text" style="font-size: 72px;">RITUAL COMPLETO</h1>
+        <p style="font-size: 32px; color: #00ff00;">LUIS FOI SALVO!</p>
+        <p style="font-size: 24px; color: #555; margin-top: 10px;">TODAS AS 5 NOITES FORAM CONCLUÍDAS</p>
+        <button onclick="resetGame()" class="menu-button" style="margin-top: 30px;">REINICIAR JORNADA</button>
+    </div>
+
+    <!-- Container Principal do Jogo -->
+    <div id="game-container" class="hidden">
+        <div id="animation-stage">
+            <div id="bridge-line"></div>
+            <div id="possession-bar"></div>
+            
+            <div id="demon" class="character demon-walk"></div>
+            <div id="luis" class="character luis-character"></div>
+            
+            <div id="deadline-text">RITUAL STATUS</div>
+            
+            <div id="jumpscare-overlay" class="jumpscare-overlay hidden">
+                <div id="jumpscare-text" class="jumpscare-text"></div>
+            </div>
+        </div>
+
+        <div id="display-section">
+            <div id="text-to-type"></div>
+        </div>
+
+        <div id="info-panel">
+            <div>NOITE: <span id="night-counter" style="color: #fff;">1/5</span></div>
+            <div>RITUAL: <span id="ritual-counter" style="color: #fff;">1/7</span></div>
+            <div>RITUAIS: <span id="score-counter" style="color: #fff;">0</span></div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">SOUND</span>
+                <input type="range" id="volume-control" min="0" max="100" value="50" style="width: 60px; height: 4px; background: #333; -webkit-appearance: none; appearance: none;">
+                <span id="volume-label" style="font-size: 14px; color: #888;">50%</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

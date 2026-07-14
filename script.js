@@ -1,4 +1,4 @@
-// script.js
+// script.js - Versão corrigida para GitHub Pages
 const monologue = `"ELES ACHAM QUE EU SOU LOUCO. 'O LUIS PIROU DE VEZ', DIZEM OS MEUS COLEGAS DESENVOLVEDORES. 'ELE PASSOU TEMPO DEMAIS ISOLADO CODANDO NA INTERNET'. TOLOS... ELES NAO CONSEGUEM VER O OBVIO. ELES NAO SABEM QUEM REALMENTE FINANCIA AS GRANDES BIG TECHS, QUEM DITA AS REGRAS DO FEDERAL RESERVE, QUEM MANIPULA A MIDIA INTERNACIONAL PARA MANTER A POPULACAO CEGA. OS ROTHSCHILDS... A ELITE DE HOLLYWOOD... A CABALA GLOBALISTA QUE CONTROLA CADA CENTAVO QUE CIRCULA NESTE PLANETA MISERAVEL.
 
 EU DESCOBRI OS CODIGOS OCULTOS DELES. EU EXPUS A VERDADE NOS MEUS FORUNS. E QUAL FOI A RESPOSTA DA ELITE? ELES NAO MANDARAM A POLICIA, NEM ADVOGADOS. ELES ABRIRAM OS PORTÕES DO PRÓPRIO INFERNO E ENVIARAM UM COBRADOR DEMONIACO PARA ARRANCAR A MINHA ALMA E QUEIMAR OS MEUS HDS.
@@ -150,7 +150,7 @@ function copyEthAddress() {
 // --- SKIP MONÓLOGO ---
 function skipMonologue() {
     if (monologueTypingInterval) {
-        clearInterval(monologueTypingInterval);
+        clearTimeout(monologueTypingInterval);
         monologueTypingInterval = null;
     }
     if (monologueAudio) {
@@ -184,7 +184,14 @@ function typeMonologue() {
     
     if (monologueAudio) {
         monologueAudio.volume = volumeControl.value / 100;
-        monologueAudio.play().catch(err => console.warn('Erro ao tocar monólogo:', err));
+        monologueAudio.play().catch(err => {
+            console.warn('Erro ao tocar monólogo:', err);
+            // Se não conseguir tocar, mostra o botão mesmo assim
+            setTimeout(() => {
+                monologueButtonContainer.classList.remove('hidden');
+                monologueCursor.style.display = 'none';
+            }, 2000);
+        });
         isMonologuePlaying = true;
         
         monologueAudio.addEventListener('ended', function onAudioEnd() {
@@ -224,6 +231,13 @@ function typeMonologue() {
             monologueCursor.style.display = 'none';
             if (audioFinished) {
                 monologueButtonContainer.classList.remove('hidden');
+            } else {
+                // Se o áudio ainda não terminou, espera
+                setTimeout(() => {
+                    if (!monologueButtonContainer.classList.contains('hidden')) return;
+                    // Se passou 10 segundos e ainda não terminou, mostra o botão
+                    monologueButtonContainer.classList.remove('hidden');
+                }, 10000);
             }
         }
     }
@@ -231,25 +245,35 @@ function typeMonologue() {
     typeNextChar();
 }
 
-// --- SISTEMA DE ÁUDIO ---
+// --- SISTEMA DE ÁUDIO - CORRIGIDO PARA GITHUB PAGES ---
 function initAudio() {
     try {
-        stormAudio = new Audio('distant-storm-1.wav');
+        // Usa caminhos relativos com extensão correta
+        const audioFiles = {
+            storm: 'distant-storm-1.wav',
+            monologue: 'monologo.mp3',
+            game: '8-bit-horror-noises.mp3',
+            baby: 'baby-crying-1-month.wav'
+        };
+        
+        // Verifica se os arquivos existem antes de criar
+        stormAudio = new Audio(audioFiles.storm);
         stormAudio.loop = true;
         stormAudio.volume = volumeControl.value / 100 * 0.8;
         
-        monologueAudio = new Audio('monologo.mp3');
+        monologueAudio = new Audio(audioFiles.monologue);
         monologueAudio.volume = volumeControl.value / 100;
         monologueAudio.loop = false;
         
-        audioElement = new Audio('8-bit-horror-noises.mp3');
+        audioElement = new Audio(audioFiles.game);
         audioElement.loop = true;
         audioElement.volume = volumeControl.value / 100;
         
-        babyCryAudio = new Audio('baby-crying-1-month.wav');
+        babyCryAudio = new Audio(audioFiles.baby);
         babyCryAudio.volume = Math.min(1, (volumeControl.value / 100) * 1.5);
         babyCryAudio.loop = false;
         
+        // Áudios do Luis (1.mp3 a 8.mp3)
         for (let i = 1; i <= 8; i++) {
             const audio = new Audio(`${i}.mp3`);
             audio.volume = 1.0;
@@ -257,20 +281,33 @@ function initAudio() {
             luisAudios.push(audio);
         }
         
+        // Tenta tocar a tempestade
         stormAudio.play().catch(err => {
-            console.warn('Autoplay bloqueado:', err);
+            console.warn('Áudio bloqueado, aguardando interação do usuário');
+            // Adiciona listener para tocar após clique
+            document.addEventListener('click', function playOnClick() {
+                if (stormAudio && stormAudio.paused) {
+                    stormAudio.play().catch(() => {});
+                }
+                document.removeEventListener('click', playOnClick);
+            }, { once: true });
         });
         
         setupAudioDistortion();
         
         audioElement.addEventListener('canplaythrough', () => {
             isAudioReady = true;
-            console.log('Áudio do jogo carregado!');
+            console.log('✅ Áudio do jogo carregado!');
+        });
+        
+        // Evento de erro para debug
+        audioElement.addEventListener('error', (e) => {
+            console.warn('⚠️ Erro ao carregar áudio:', e.target.src);
         });
         
         return true;
     } catch (error) {
-        console.error('Erro ao criar áudio:', error);
+        console.error('❌ Erro ao criar áudio:', error);
         return false;
     }
 }
@@ -303,7 +340,7 @@ function setupAudioDistortion() {
         gainNode.connect(audioContext.destination);
         gainNode.gain.value = 0.8;
     } catch (e) {
-        console.warn('Erro ao configurar distorção:', e);
+        console.warn('⚠️ Erro ao configurar distorção:', e);
     }
 }
 
@@ -319,12 +356,6 @@ function updateVolume(value) {
 
 volumeControl.addEventListener('input', (e) => {
     updateVolume(e.target.value);
-});
-
-document.addEventListener('click', () => {
-    if (stormAudio && stormAudio.paused) {
-        stormAudio.play().catch(() => {});
-    }
 });
 
 // --- FUNÇÃO DO BABY CRYING ---
@@ -400,7 +431,6 @@ function playLuisAudio() {
         audio.currentTime = 0;
         audio.volume = 1.0;
         audio.play().catch(err => console.warn('Erro ao tocar audio do Luis:', err));
-        console.log(`Luis falando: ${randomIndex + 1}.mp3 (MÁXIMO)`);
     } catch (err) {
         console.warn('Erro ao tocar audio do Luis:', err);
     }
@@ -446,7 +476,6 @@ function startGame() {
         monologueAudio.currentTime = 0;
     }
     
-    // Carrega save ou inicia novo jogo
     const hasSave = loadSaveData();
     if (!hasSave) {
         currentNight = 1;
@@ -458,7 +487,7 @@ function startGame() {
     isPlaying = true;
     score = 0;
     demonPosition = 0;
-    baseSpeed = 0.5 + (currentNight - 1) * 0.1; // Aumenta dificuldade por noite
+    baseSpeed = 0.5 + (currentNight - 1) * 0.1;
     isHurtAnimating = false;
     
     updateUI();
@@ -472,7 +501,6 @@ function startGame() {
     
     if (audioElement && audioElement.paused) {
         audioElement.play().catch(err => console.warn('Erro ao tocar música do jogo:', err));
-        console.log('🎮 Música do jogo iniciada!');
     }
     
     scheduleJumpscare();
@@ -489,7 +517,6 @@ function updateUI() {
 function scheduleJumpscare() {
     if (!isPlaying) return;
     const delay = 15000 + Math.random() * 30000;
-    console.log(`⏰ Próximo jumpscare em ${Math.round(delay/1000)}s`);
     
     setTimeout(() => {
         if (isPlaying) {
@@ -603,19 +630,14 @@ window.addEventListener("keydown", (e) => {
         showHurtAnimation();
         
         if (typedIndex >= currentSentence.length) {
-            // Ritual completo
             totalRituals++;
             ritualsCompleted++;
             scoreCounter.innerText = totalRituals;
             
-            // Salva o progresso
             saveGameData();
             
-            // Verifica se completou a noite
             if (ritualsCompleted >= RITUALS_PER_NIGHT) {
-                // Noite completa!
                 if (currentNight >= MAX_NIGHTS) {
-                    // Jogo completo!
                     gameCompleted = true;
                     saveGameData();
                     showGameComplete();
@@ -732,7 +754,6 @@ function restartGame() {
 }
 
 function resetGame() {
-    // Reseta todo o progresso
     localStorage.removeItem(SAVE_KEY);
     currentNight = 1;
     ritualsCompleted = 0;
@@ -758,16 +779,9 @@ function resetGame() {
 window.addEventListener('load', () => {
     checkLuisImage();
     initAudio();
-    
-    // Verifica se há save
-    const save = getSaveData();
-    if (save && save.gameCompleted) {
-        // Se já completou o jogo, mostra opção de recomeçar
-        console.log('📂 Jogo já completado!');
-    }
 });
 
-// Função global para copiar ETH
+// Funções globais
 window.copyEthAddress = copyEthAddress;
 window.showMonologue = showMonologue;
 window.startGame = startGame;

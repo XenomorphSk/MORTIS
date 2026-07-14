@@ -1,4 +1,4 @@
-// script.js - Versão corrigida para GitHub Pages
+// script.js - Versão que funciona sem áudio (fallback)
 const monologue = `"ELES ACHAM QUE EU SOU LOUCO. 'O LUIS PIROU DE VEZ', DIZEM OS MEUS COLEGAS DESENVOLVEDORES. 'ELE PASSOU TEMPO DEMAIS ISOLADO CODANDO NA INTERNET'. TOLOS... ELES NAO CONSEGUEM VER O OBVIO. ELES NAO SABEM QUEM REALMENTE FINANCIA AS GRANDES BIG TECHS, QUEM DITA AS REGRAS DO FEDERAL RESERVE, QUEM MANIPULA A MIDIA INTERNACIONAL PARA MANTER A POPULACAO CEGA. OS ROTHSCHILDS... A ELITE DE HOLLYWOOD... A CABALA GLOBALISTA QUE CONTROLA CADA CENTAVO QUE CIRCULA NESTE PLANETA MISERAVEL.
 
 EU DESCOBRI OS CODIGOS OCULTOS DELES. EU EXPUS A VERDADE NOS MEUS FORUNS. E QUAL FOI A RESPOSTA DA ELITE? ELES NAO MANDARAM A POLICIA, NEM ADVOGADOS. ELES ABRIRAM OS PORTÕES DO PRÓPRIO INFERNO E ENVIARAM UM COBRADOR DEMONIACO PARA ARRANCAR A MINHA ALMA E QUEIMAR OS MEUS HDS.
@@ -89,7 +89,7 @@ let ritualsCompleted = 0;
 let totalRituals = 0;
 let gameCompleted = false;
 
-// Áudio
+// Áudio - Versão simplificada sem dependência de arquivos
 let audioElement = null;
 let isAudioReady = false;
 let babyCryAudio = null;
@@ -98,9 +98,7 @@ let jumpscareTimeout = null;
 let babyCryInterval = null;
 let stormAudio = null;
 let monologueAudio = null;
-let isMonologuePlaying = false;
 let monologueTypingInterval = null;
-let audioContext = null;
 
 // Áudios do Luis
 let luisAudios = [];
@@ -154,10 +152,6 @@ function skipMonologue() {
         clearTimeout(monologueTypingInterval);
         monologueTypingInterval = null;
     }
-    if (monologueAudio) {
-        monologueAudio.pause();
-        monologueAudio.currentTime = 0;
-    }
     monologueText.textContent = monologue;
     monologueCursor.style.display = 'none';
     monologueButtonContainer.classList.remove('hidden');
@@ -167,12 +161,6 @@ function skipMonologue() {
 function showMonologue() {
     menuScreen.classList.add('hidden');
     monologueScreen.classList.remove('hidden');
-    
-    if (stormAudio) {
-        stormAudio.pause();
-        stormAudio.currentTime = 0;
-    }
-    
     typeMonologue();
 }
 
@@ -181,29 +169,6 @@ function typeMonologue() {
     let charIndex = 0;
     const text = monologue;
     let displayText = "";
-    let audioFinished = false;
-    
-    if (monologueAudio) {
-        monologueAudio.volume = volumeControl.value / 100;
-        monologueAudio.play().catch(err => {
-            console.warn('Erro ao tocar monólogo:', err);
-            // Mostra o botão mesmo sem áudio
-            setTimeout(() => {
-                monologueButtonContainer.classList.remove('hidden');
-                monologueCursor.style.display = 'none';
-            }, 2000);
-        });
-        isMonologuePlaying = true;
-        
-        monologueAudio.addEventListener('ended', function onAudioEnd() {
-            audioFinished = true;
-            monologueAudio.removeEventListener('ended', onAudioEnd);
-            if (monologueButtonContainer.classList.contains('hidden')) {
-                monologueButtonContainer.classList.remove('hidden');
-                monologueCursor.style.display = 'none';
-            }
-        });
-    }
     
     function typeNextChar() {
         if (charIndex < text.length) {
@@ -230,197 +195,35 @@ function typeMonologue() {
             monologueTypingInterval = setTimeout(typeNextChar, delay);
         } else {
             monologueCursor.style.display = 'none';
-            if (audioFinished) {
-                monologueButtonContainer.classList.remove('hidden');
-            } else {
-                setTimeout(() => {
-                    if (!monologueButtonContainer.classList.contains('hidden')) return;
-                    monologueButtonContainer.classList.remove('hidden');
-                }, 8000);
-            }
+            monologueButtonContainer.classList.remove('hidden');
         }
     }
     
     typeNextChar();
 }
 
-// --- SISTEMA DE ÁUDIO CORRIGIDO ---
+// --- INICIALIZAÇÃO DO ÁUDIO (SIMPLIFICADA) ---
 function initAudio() {
-    try {
-        // Cria o AudioContext para gerenciar áudio
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Função para criar áudio com fallback
-        function createAudio(src) {
-            const audio = new Audio();
-            audio.src = src;
-            audio.preload = 'auto';
-            return audio;
-        }
-        
-        // Verifica se os arquivos existem com diferentes extensões
-        const audioFiles = {
-            storm: ['distant-storm-1.wav', 'distant-storm-1.mp3'],
-            monologue: ['monologo.mp3', 'monologo.wav'],
-            game: ['8-bit-horror-noises.mp3', '8-bit-horror-noises.wav'],
-            baby: ['baby-crying-1-month.wav', 'baby-crying-1-month.mp3']
-        };
-        
-        // Tenta carregar cada áudio com fallback
-        stormAudio = createAudio(audioFiles.storm[0]);
-        stormAudio.loop = true;
-        stormAudio.volume = volumeControl.value / 100 * 0.8;
-        
-        monologueAudio = createAudio(audioFiles.monologue[0]);
-        monologueAudio.volume = volumeControl.value / 100;
-        monologueAudio.loop = false;
-        
-        audioElement = createAudio(audioFiles.game[0]);
-        audioElement.loop = true;
-        audioElement.volume = volumeControl.value / 100;
-        
-        babyCryAudio = createAudio(audioFiles.baby[0]);
-        babyCryAudio.volume = Math.min(1, (volumeControl.value / 100) * 1.5);
-        babyCryAudio.loop = false;
-        
-        // Áudios do Luis (1.mp3 a 8.mp3)
-        for (let i = 1; i <= 8; i++) {
-            const audio = createAudio(`${i}.mp3`);
-            audio.volume = 1.0;
-            audio.loop = false;
-            luisAudios.push(audio);
-        }
-        
-        // Tenta tocar a tempestade - apenas se o usuário já interagiu
-        const tryPlayStorm = () => {
-            if (stormAudio && stormAudio.paused) {
-                stormAudio.play().catch(err => {
-                    console.log('⏳ Aguardando interação para tocar áudio');
-                });
-            }
-        };
-        
-        // Toca quando o usuário clicar
-        document.addEventListener('click', function playOnClick() {
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            tryPlayStorm();
-            document.removeEventListener('click', playOnClick);
-        }, { once: true });
-        
-        // Tenta tocar imediatamente (pode falhar)
-        setTimeout(tryPlayStorm, 100);
-        
-        setupAudioDistortion();
-        
-        audioElement.addEventListener('canplaythrough', () => {
-            isAudioReady = true;
-            console.log('✅ Áudio do jogo carregado!');
-        });
-        
-        // Evento de erro com fallback
-        audioElement.addEventListener('error', (e) => {
-            console.warn('⚠️ Erro ao carregar áudio:', e.target.src);
-            // Tenta carregar com extensão alternativa
-            const src = e.target.src;
-            if (src.endsWith('.mp3')) {
-                e.target.src = src.replace('.mp3', '.wav');
-            } else if (src.endsWith('.wav')) {
-                e.target.src = src.replace('.wav', '.mp3');
-            }
-        });
-        
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao criar áudio:', error);
-        return false;
-    }
-}
-
-function setupAudioDistortion() {
-    if (!babyCryAudio) return;
-    try {
-        // Verifica se o AudioContext já existe
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        // Tenta criar o nó de distorção
-        try {
-            const source = audioContext.createMediaElementSource(babyCryAudio);
-            const gainNode = audioContext.createGain();
-            const distortion = audioContext.createWaveShaper();
-            
-            function makeDistortionCurve(amount) {
-                const k = amount;
-                const n_samples = 44100;
-                const curve = new Float32Array(n_samples);
-                const deg = Math.PI / 180;
-                let i = 0, x;
-                for (; i < n_samples; ++i) {
-                    x = i * 2 / n_samples - 1;
-                    curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
-                }
-                return curve;
-            }
-            
-            distortion.curve = makeDistortionCurve(30);
-            distortion.oversample = '4x';
-            source.connect(distortion);
-            distortion.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            gainNode.gain.value = 0.8;
-        } catch (e) {
-            console.warn('⚠️ Distorção não disponível, continuando sem ela');
-        }
-    } catch (e) {
-        console.warn('⚠️ Erro ao configurar distorção:', e);
-    }
+    console.log('🎵 Sistema de áudio inicializado (modo simplificado)');
+    isAudioReady = true;
+    return true;
 }
 
 function updateVolume(value) {
     const volume = value / 100;
     volumeLabel.textContent = Math.round(value) + '%';
-    
-    if (audioElement) audioElement.volume = volume;
-    if (stormAudio) stormAudio.volume = volume * 0.8;
-    if (monologueAudio) monologueAudio.volume = volume;
-    if (babyCryAudio) babyCryAudio.volume = Math.min(1, volume * 1.5);
 }
 
 volumeControl.addEventListener('input', (e) => {
     updateVolume(e.target.value);
 });
 
-// --- FUNÇÃO DO BABY CRYING ---
+// --- FUNÇÃO DO BABY CRYING (SEM ÁUDIO) ---
 function triggerBabyCry() {
-    if (!isPlaying || !babyCryAudio) return;
+    if (!isPlaying) return;
     if (babyCryTimeout) return;
     
-    console.log('👶 BEBÊ CHORANDO!');
-    
-    if (audioElement) audioElement.pause();
-    
-    try {
-        babyCryAudio.currentTime = 0;
-        babyCryAudio.volume = Math.min(1, (volumeControl.value / 100) * 1.8);
-        babyCryAudio.play().catch(err => console.warn('Erro ao tocar baby cry:', err));
-        
-        let count = 0;
-        babyCryInterval = setInterval(() => {
-            if (babyCryAudio) {
-                babyCryAudio.volume = Math.min(1, (0.5 + Math.random() * 0.8) * 1.5);
-                count++;
-                if (count > 30) {
-                    clearInterval(babyCryInterval);
-                    babyCryInterval = null;
-                }
-            }
-        }, 100);
-    } catch (err) {
-        console.warn('Erro ao tocar baby cry:', err);
-    }
+    console.log('👶 BEBÊ CHORANDO! (efeito visual)');
     
     const randomMessage = jumpscareMessages[Math.floor(Math.random() * jumpscareMessages.length)];
     const randomColor = Math.floor(Math.random() * 8) + 1;
@@ -433,42 +236,18 @@ function triggerBabyCry() {
     jumpscareTimeout = setTimeout(() => {
         jumpscareOverlay.classList.add('hidden');
         container.classList.remove("shake");
-        if (audioElement && isPlaying) audioElement.play().catch(() => {});
         jumpscareTimeout = null;
     }, 2000);
     
     babyCryTimeout = setTimeout(() => {
-        if (babyCryAudio) {
-            babyCryAudio.pause();
-            babyCryAudio.currentTime = 0;
-        }
-        if (babyCryInterval) {
-            clearInterval(babyCryInterval);
-            babyCryInterval = null;
-        }
         babyCryTimeout = null;
     }, 15000);
 }
 
-// --- FUNÇÃO PARA TOCAR ÁUDIO DO LUIS ---
+// --- FUNÇÃO PARA TOCAR ÁUDIO DO LUIS (SEM ÁUDIO) ---
 function playLuisAudio() {
     if (!isPlaying || luisAudioTimeout) return;
-    
-    let randomIndex;
-    do {
-        randomIndex = Math.floor(Math.random() * luisAudios.length);
-    } while (randomIndex === lastLuisAudioIndex && luisAudios.length > 1);
-    
-    lastLuisAudioIndex = randomIndex;
-    const audio = luisAudios[randomIndex];
-    
-    try {
-        audio.currentTime = 0;
-        audio.volume = 1.0;
-        audio.play().catch(err => console.warn('Erro ao tocar audio do Luis:', err));
-    } catch (err) {
-        console.warn('Erro ao tocar audio do Luis:', err);
-    }
+    console.log('🔊 Luis falando (efeito visual)');
     
     luisAudioTimeout = setTimeout(() => {
         luisAudioTimeout = null;
@@ -506,16 +285,6 @@ function startGame() {
     monologueScreen.classList.add('hidden');
     container.classList.remove('hidden');
     
-    // Resume o AudioContext se estiver suspenso
-    if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    
-    if (monologueAudio) {
-        monologueAudio.pause();
-        monologueAudio.currentTime = 0;
-    }
-    
     const hasSave = loadSaveData();
     if (!hasSave) {
         currentNight = 1;
@@ -538,10 +307,6 @@ function startGame() {
     
     nextSentence();
     gameInterval = setInterval(updateGame, 100);
-    
-    if (audioElement && audioElement.paused) {
-        audioElement.play().catch(err => console.warn('Erro ao tocar música do jogo:', err));
-    }
     
     scheduleJumpscare();
 }
@@ -705,10 +470,6 @@ function showNightComplete() {
     clearInterval(gameInterval);
     container.classList.add('hidden');
     nightCompleteScreen.classList.remove('hidden');
-    
-    if (audioElement) {
-        audioElement.pause();
-    }
 }
 
 function showGameComplete() {
@@ -716,10 +477,6 @@ function showGameComplete() {
     clearInterval(gameInterval);
     container.classList.add('hidden');
     gameCompleteScreen.classList.remove('hidden');
-    
-    if (audioElement) {
-        audioElement.pause();
-    }
 }
 
 function continueNight() {
@@ -743,10 +500,6 @@ function continueNight() {
     nextSentence();
     gameInterval = setInterval(updateGame, 100);
     
-    if (audioElement && audioElement.paused) {
-        audioElement.play().catch(() => {});
-    }
-    
     scheduleJumpscare();
 }
 
@@ -758,15 +511,6 @@ function gameOver() {
     if (jumpscareTimeout) clearTimeout(jumpscareTimeout);
     if (babyCryInterval) clearInterval(babyCryInterval);
     if (luisAudioTimeout) clearTimeout(luisAudioTimeout);
-    
-    if (babyCryAudio) {
-        babyCryAudio.pause();
-        babyCryAudio.currentTime = 0;
-    }
-    luisAudios.forEach(audio => {
-        audio.pause();
-        audio.currentTime = 0;
-    });
     
     document.getElementById("final-score").innerText = `RITUAIS: ${totalRituals}`;
     document.getElementById("gameover-screen").classList.remove("hidden");
@@ -781,16 +525,6 @@ function restartGame() {
     document.getElementById("gameover-screen").classList.add("hidden");
     container.classList.add('hidden');
     menuScreen.classList.remove('hidden');
-    
-    if (audioElement) {
-        audioElement.pause();
-        audioElement.currentTime = 0;
-    }
-    
-    if (stormAudio) {
-        stormAudio.currentTime = 0;
-        stormAudio.play().catch(() => {});
-    }
 }
 
 function resetGame() {
@@ -803,16 +537,6 @@ function resetGame() {
     document.getElementById("game-complete-screen").classList.add('hidden');
     menuScreen.classList.remove('hidden');
     container.classList.add('hidden');
-    
-    if (audioElement) {
-        audioElement.pause();
-        audioElement.currentTime = 0;
-    }
-    
-    if (stormAudio) {
-        stormAudio.currentTime = 0;
-        stormAudio.play().catch(() => {});
-    }
 }
 
 // --- INICIALIZAÇÃO ---
